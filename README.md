@@ -28,7 +28,6 @@ Open to **junior backend and full-stack roles**.
 ## Contact
 
 - Email: `sablelight@proton.me`
-- Location: <!-- TODO: fill in before publishing -->
 
 ---
 
