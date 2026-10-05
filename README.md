@@ -1,12 +1,10 @@
 # sablelight
 
-**Backend / full-stack developer.** Go, Python, C#, PostgreSQL, Redis, Cloudflare Workers,
-Playwright, and comfortable in Linux when the problem is below the application.
+Backend / full-stack developer. Go, Python, C#, PostgreSQL, Redis, Cloudflare Workers, Playwright, and comfortable in Linux when the problem is below the application.
 
 Open to **junior backend and full-stack roles**.
 
-> This account is pseudonymous. My real name is on my CV and I'm happy to give it
-> directly — email me and ask.
+> This account is pseudonymous. My real name is on my CV and I'm happy to give it directly — email me and ask.
 
 ## What I've built
 
@@ -19,10 +17,8 @@ Open to **junior backend and full-stack roles**.
 
 ## Things I'm into
 
-- **Debugging the actual cause.** Ruling out the obvious explanations with evidence before
-  forming a theory — the fastest way I've found to be wrong less often.
-- **Distributed systems under real limits.** Scheduling work inside platform caps rather than
-  assuming infinite ones.
+- **Debugging the actual cause.** Ruling out the obvious explanations with evidence before forming a theory — the fastest way I've found to be wrong less often.
+- **Distributed systems under real limits.** Scheduling work inside platform caps rather than assuming infinite ones.
 - **Rewriting my own tools.** Automating anything I'd otherwise do by hand a third time.
 
 ## Contact
