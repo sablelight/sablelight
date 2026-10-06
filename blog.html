@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Writing — sablelight</title>
+<meta name="description" content="Backend / full-stack developer — Go, Python, C#, Redis, Cloudflare Workers. Notes on the parts that bit me.">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <span class="brand">sablelight</span>
+    <nav>
+      <a href="/" class="on">Home</a>
+<main class="wrap">
+  <div class="hero">
+    <h1>Writing</h1>
+    <p class="lead">
+      Short notes on problems I hit and what fixed them. Mostly Go, Redis, and
+      the parts of concurrency that are easy to get subtly wrong.
+    </p>
+  </div>
+
+  <ul class="posts">
+    <li>
+      <span class="date">Oct 2026</span>
+      <div class="t"><a href="/posts/double-checked-locking.html">Double-checked locking, and the test that caught me</a></div>
+      <div class="d">Caching an HTTP client so it only rebuilds when it must — and a test that failed for a reason that turned out to be the design working correctly.</div>
+    </li>
+    <li>
+      <span class="date">Oct 2026</span>
+      <div class="t"><a href="/posts/go-redis-nil.html">go-redis returns redis.Nil, and redis.Nil == nil</a></div>
+      <div class="d">A one-line Go gotcha that broke the build, then broke a test suite in a way I did not expect.</div>
+    </li>
+    <li>
+      <span class="date">Oct 2026</span>
+      <div class="t"><a href="/posts/token-bucket-lua.html">Rate limiting with a Redis Lua script</a></div>
+      <div class="d">Why the obvious INCR/EXPIRE implementation leaks under load, and what atomicity actually buys you.</div>
+    </li>
+    <li>
+      <span class="date">Oct 2026</span>
+      <div class="t"><a href="/posts/extract-before-you-publish.html">Extract the library before you publish the app</a></div>
+      <div class="d">A project with nothing worth showing became two independently testable packages. The extraction is the work.</div>
+    </li>
+    <li>
+      <span class="date">Oct 2026</span>
+      <div class="t"><a href="/posts/go-vs-python-rest.html">One spec, two runtimes: Go stdlib vs FastAPI</a></div>
+      <div class="d">Writing the same REST API twice. Where the two actually felt different, beyond the usual talking points.</div>
+    </li>
+  </ul>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p><a href="/">← Back</a> · Built by <a href="https://github.com/sablelight">sablelight</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

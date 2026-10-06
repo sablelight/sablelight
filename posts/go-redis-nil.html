@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>go-redis returns redis.Nil, and redis.Nil == nil — sablelight</title>
+<meta name="description" content="A one-line Go gotcha that broke the build, then broke a test suite in a way I did not expect.">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <span class="brand">sablelight</span>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/blog.html" class="on">Blog</a>
+      <a href="https://github.com/sablelight">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>go-redis returns <code>redis.Nil</code>, and <code>redis.Nil == nil</code></h1>
+    <p class="lead">
+      A one-line Go gotcha that broke the build, then broke a test suite in a way
+      I did not expect.
+    </p>
+  </div>
+
+  <p>
+    <code>redis.Nil</code> is an <code>error</code> value that means "that key does not
+    exist". It is not the same thing as <code>nil</code>, and Go will happily let you
+    pretend it is.
+  </p>
+
+<pre><code>val, err := rdb.Get(ctx, "missing").Result()
+if err == redis.Nil {
+    // key absent — handle it
+}
+if err != nil {
+    return err
+}</code></pre>
+
+  <p>That is the documented form and it works. The trap is what happens when it slips.</p>
+
+  <h2>It will not compile if you forget, which is good</h2>
+
+  <p>
+    When I first hit this I wrote the obvious thing:
+  </p>
+
+<pre><code>val, err := rdb.Get(ctx, key).Result()
+if err != nil {
+    return nil, err
+}
+return val, nil</code></pre>
+
+  <p>
+    That compiles. It compiled fine. The problem was not the build at all — it was that
+    <code>Get</code> returns <code>""</code> for a missing key, and callers were
+    treating an empty string as a legitimate value. No panic, no error, just silently
+    wrong behaviour that only showed up under load.
+  </p>
+
+  <h2>Where it actually bit me</h2>
+
+  <p>
+    In the job queue, <code>XReadGroup</code> returns <code>redis.Nil</code> when a
+    consumer group has no new entries — which is the normal case when the queue is
+    empty and the worker is doing its job correctly. My first version treated that as
+    an error and logged it every poll interval:
+  </p>
+
+<pre><code>streams, err := q.client.XReadGroup(ctx, args).Result()
+if err != nil {
+    return nil, err   // logs every second when idle
+}</code></pre>
+
+  <p>It filled a log with 86,400 identical lines a day. Correct-looking code, useless in production.</p>
+
+<pre><code>streams, err := q.client.XReadGroup(ctx, args).Result()
+if err == redis.Nil {
+    return nil, nil   // idle is not an error
+}
+if err != nil {
+    return nil, err
+}</code></pre>
+
+  <h2>The rule I keep now</h2>
+
+  <ul>
+    <li>Missing data is not an error. Handle <code>redis.Nil</code> as its own case.</li>
+    <li>In a poll loop, "nothing to do" is the common case — do not log it as a failure.</li>
+    <li>When a function returns a value and an error, decide explicitly what an empty
+        result means before you ship it.</li>
+  </ul>
+
+  <p>
+    The <a href="https://github.com/sablelight/job-queue">job-queue</a> worker now runs
+    quiet when idle, which is the correct behaviour for a background process.
+  </p>
+
+  <p><a href="/blog.html">← All posts</a></p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p><a href="/">← Back</a> · Built by <a href="https://github.com/sablelight">sablelight</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

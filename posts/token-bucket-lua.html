@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rate limiting with a Redis Lua script — sablelight</title>
+<meta name="description" content="Why the obvious INCR/EXPIRE implementation leaks under load, and what atomicity actually buys you.">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <span class="brand">sablelight</span>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/blog.html" class="on">Blog</a>
+      <a href="https://github.com/sablelight">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>Rate limiting with a Redis Lua script</h1>
+    <p class="lead">
+      Why the obvious <code>INCR</code>/<code>EXPIRE</code> implementation leaks under
+      load, and what atomicity actually buys you.
+    </p>
+  </div>
+
+  <h2>The version everyone writes first</h2>
+
+  <p>A fixed window, with <code>INCR</code> and <code>EXPIRE</code>:</p>
+
+<pre><code>n := rdb.Incr(ctx, key)
+if n == 1 {
+    rdb.Expire(ctx, key, time.Second)
+}
+if n > limit {
+    return false, nil
+}</code></pre>
+
+  <p>
+    It works, it is short, and it is wrong in two ways that matter.
+  </p>
+
+  <p>
+    First, the window boundary. A client can send <code>limit</code> requests at
+    0.999s and <code>limit</code> more at 1.001s — double the intended rate, twice in
+    a row, every minute. Fixed windows have this shape and no amount of tuning removes
+    it.
+  </p>
+
+  <p>
+    Second, and worse for a gateway, it is not atomic. <code>Incr</code> and
+    <code>Expire</code> are two round trips. Under concurrency, several requests can
+    see <code>n == 1</code> at once and all of them reset the TTL — which means the
+    window never actually expires and the counter grows without bound. Or a request
+    crashes between the two calls and the key becomes a permanent counter with no
+    expiry at all.
+  </p>
+
+  <h2>Why Lua helps</h2>
+
+  <p>
+    Redis executes a Lua script as a single unit — nothing else runs against the
+    server while it is in flight. That gives you atomicity without a distributed lock,
+    because the "lock" is Redis itself.
+  </p>
+
+<pre><code>local key = KEYS[1]
+local rate  = tonumber(ARGV[1])
+local burst = tonumber(ARGV[2])
+local now   = tonumber(ARGV[3])
+
+local b = redis.call('HMGET', key, 'tokens', 'last_refill')
+local tokens = tonumber(b[1])
+local last   = tonumber(b[2])
+
+if tokens == nil then tokens = burst; last = now end
+
+local elapsed = now - last
+tokens = math.min(burst, tokens + (elapsed / 1000.0) * rate)
+
+local allowed = true
+if tokens &lt; 1 then
+    allowed = false
+else
+    tokens = tokens - 1
+end
+
+redis.call('HMSET', key, 'tokens', tokens, 'last_refill', now)
+redis.call('EXPIRE', key, math.ceil(burst / rate) + 10)
+
+if allowed then return {1, 0} end
+return {0, math.ceil((1 - tokens) / rate * 1000)}
+</code></pre>
+
+  <p>
+    The script refills the bucket based on real elapsed time rather than on window
+    boundaries, so there is no boundary for a client to straddle. And because it runs
+    atomically, two concurrent requests cannot both observe <code>tokens = 1</code>
+    and both decide to subtract.
+  </p>
+
+  <h2>The trade-off worth admitting</h2>
+
+  <p>
+    Lua scripts are not free — the script is copied to the server on first run and
+    stays in cache, but a long script still blocks the instance while it executes.
+    This one is about 20 lines doing fixed arithmetic and two hash operations, which is
+    short enough not to matter in practice.
+  </p>
+
+  <p>
+    The bigger real-world constraint: it holds no lock across network hops, so
+    a failure between <code>HMSET</code> and <code>EXPIRE</code> inside the script is
+    impossible, but a script that could be split into two round trips would reintroduce
+    exactly the race I moved to Lua to remove.
+  </p>
+
+  <h2>What I built</h2>
+
+  <p>
+    <a href="https://github.com/sablelight/ratelimit-gateway">ratelimit-gateway</a> is
+    a reverse proxy that applies this to an incoming <code>X-API-Key</code> header
+    before forwarding. On rejection it returns
+    <code>429</code> with a <code>Retry-After</code> header computed by the script
+    itself — the client is told exactly how long until a token is available rather
+    than being made to guess.
+  </p>
+
+  <p><a href="/blog.html">← All posts</a></p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p><a href="/">← Back</a> · Built by <a href="https://github.com/sablelight">sablelight</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

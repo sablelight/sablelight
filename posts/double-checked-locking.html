@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Double-checked locking, and the test that caught me — sablelight</title>
+<meta name="description" content="Caching an HTTP client so it only rebuilds when it must, and a test that failed for the right reason.">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <span class="brand">sablelight</span>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/blog.html" class="on">Blog</a>
+      <a href="https://github.com/sablelight">GitHub</a>
+    </nav>
+  </div>
+</header>
+</</content>
+<main class="wrap">
+  <div class="hero">
+    <h1>Double-checked locking, and the test that caught me</h1>
+    <p class="lead">
+      A cached HTTP client that only rebuilds when the proxy actually changes —
+      and the test I wrote wrong to prove it worked.
+    </p>
+  </div>
+
+  <p>
+    The extracted <code>proxyhttp</code> package keeps a shared <code>*http.Client</code>
+    whose transport respects a proxy setting that can change while the process is
+    running. Rebuilding an <code>http.Client</code> is cheap in isolation. Doing it
+    per request is not: you throw away the connection pool and force a fresh TLS
+    handshake against every origin.
+  </p>
+
+  <p>So the client is cached, and only rebuilt when the <em>effective</em> proxy URL changes.</p>
+
+<pre><code>func Client() *http.Client {
+    current := ProxyURL()
+
+    clientMu.RLock()
+    if sharedClient != nil &amp;&amp; cachedProxyURL == current {
+        clientMu.RUnlock()
+    return sharedClient
+    }
+    clientMu.RUnlock()
+
+    clientMu.Lock()
+    defer clientMu.Unlock()
+
+    // re-check: another goroutine may have rebuilt while we waited
+    if sharedClient != nil &amp;&amp; cachedProxyURL == current {
+        return sharedClient
+    }
+
+    sharedClient = &amp;http.Client{ /* ... */ }
+    cachedProxyURL = current
+    return sharedClient
+}</code></pre>
+
+  <h2>The bug was in my test</h2>
+
+  <p>
+    I wrote this to prove the client rebuilds when the proxy changes:
+  </p>
+
+<pre><code>t.Setenv("PROXYHTTP_MODE", "direct")
+direct := Client()
+
+t.Setenv("PROXYHTTP_URL", "socks5://127.0.0.1:9050")
+proxied := Client()
+
+if direct == proxied {
+    t.Error("Client() did not rebuild after the proxy URL changed")
+}</code></pre>
+
+  <p>It failed. Every time.</p>
+
+  <p>
+    The mode was <code>direct</code>. In that mode <code>ProxyURL()</code> ignores
+    <code>PROXYHTTP_URL</code> entirely and returns <code>""</code>. So the effective
+    proxy never changed, the cache key never changed, and no rebuild happened — which
+    was the correct behaviour.
+  </p>
+
+  <p>
+    The cache is keyed on the <em>effective</em> proxy, not on raw config. That is the
+    whole point. Changing a setting that cannot affect the route should not discard a
+    warm connection pool.
+  </p>
+
+  <h2>What I actually wanted to pin</h2>
+
+  <p>Fixing the test meant writing the test I should have written:</p>
+
+<pre><code>func TestClientIgnoresIrrelevantConfigChange(t *testing.T) {
+    Invalidate()
+    t.Setenv("PROXYHTTP_MODE", "direct")
+    t.Setenv("PROXYHTTP_URL", "")
+
+    before := Client()
+
+    // in "direct" mode this cannot affect the route, so no rebuild
+    t.Setenv("PROXYHTTP_URL", "socks5://127.0.0.1:9050")
+    if after := Client(); after != before {
+        t.Error("Client() rebuilt for a config change that cannot affect the route")
+    }
+}</code></pre>
+
+  <p>
+    A failing test is not always the code telling you something. Sometimes it is the
+    code telling you it is right and your model of it was wrong. Both happen, and the
+    honest move is to work out which one you are looking at before changing either.
+  </p>
+
+  <p>
+    Coverage on both packages ended up at 92%. More usefully, the race detector passes
+    on a test that hammers <code>Client()</code> from 32 goroutines and asserts they
+    all got the same pointer back — which is the property the double-check exists to
+    provide.
+  </p>
+
+  <p><a href="/blog.html">← All posts</a></p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p><a href="/">← Back</a> · Built by <a href="https://github.com/sablelight">sablelight</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

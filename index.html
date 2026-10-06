@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sablelight</title>
+<meta name="description" content="Backend / full-stack developer — Go, Python, C#, Redis, Cloudflare Workers. Notes on the parts that bit me.">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <span class="brand">sablelight</span>
+    <nav>
+      <a href="/" class="on">Home</a>
+      <a href="/blog.html">Blog</a>
+      <a href="https://github.com/sablelight">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <h1>Backend / full-stack developer</h1>
+    <p class="lead">
+      I build things and then take them apart to understand why they work.
+      Go, Python, C#, PostgreSQL, Redis, Cloudflare Workers — and comfortable in
+      Linux when the problem turns out to be below the application.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/sablelight">GitHub</a>
+      <a class="btn" href="sablelight@proton.me">Email</a>
+      <a class="btn" href="/blog.html">Writing</a>
+    </div>
+  </div>
+
+  <div class="note">
+    This account is pseudonymous. My real name is on my CV and I'm happy to give
+    it directly — email me and ask.
+  </div>
+
+  <section>
+    <h2>Things I've built</h2>
+    <div class="grid">
+
+      <div class="card">
+        <h3><a href="https://github.com/sablelight/ratelimit-gateway">ratelimit-gateway</a></h3>
+        <p>Reverse proxy that enforces per-key rate limits using a Redis token bucket. Lua script for atomicity.</p>
+        <div class="stack"><span class="tag">Go</span><span class="tag">Redis</span><span class="tag">Docker</span></div>
+      </div>
+
+      <div class="card">
+        <h3><a href="https://github.com/sablelight/job-queue">job-queue</a></h3>
+        <p>Background job system on Redis Streams. Consumer groups, retries with backoff, dead-letter queue.</p>
+        <div class="stack"><span class="tag">Go</span><span class="tag">Redis</span><span class="tag">Concurrency</span></div>
+      </div>
+
+      <div class="card">
+        <h3><a href="https://github.com/sablelight/telegram-bot">telegram-bot</a></h3>
+        <p>Two extracted libraries: env-backed config registry, and an HTTP client that rebuilds itself when the proxy changes.</p>
+        <div class="stack"><span class="tag">Go</span><span class="tag">Concurrency</span><span class="tag">92% coverage</span></div>
+      </div>
+
+      <div class="card">
+        <h3><a href="https://github.com/sablelight/webhook-sender">webhook-sender</a></h3>
+        <p>The same tool built twice — C#/.NET 10 WPF and Python/Tkinter — to see how two runtimes solve the same problems.</p>
+        <div class="stack"><span class="tag">C#</span><span class="tag">Python</span><span class="tag">WPF</span></div>
+      </div>
+
+      <div class="card">
+        <h3><a href="https://github.com/sablelight/link-checker">link-checker</a></h3>
+        <p>Scheduled URL monitoring on Cloudflare Workers. D1 for history, KV for cache, webhooks for alerts.</p>
+        <div class="stack"><span class="tag">TypeScript</span><span class="tag">Workers</span><span class="tag">D1</span></div>
+      </div>
+
+      <div class="card">
+        <h3><a href="https://github.com/sablelight/gh-prune">gh-prune</a></h3>
+        <p>CLI that deletes merged GitHub branches. Dry-run by default, because deleting things on someone's behalf deserves it.</p>
+        <div class="stack"><span class="tag">Go</span><span class="tag">Cobra</span><span class="tag">GitHub API</span></div>
+      </div>
+
+      <div class="card">
+        <h3><a href="https://github.com/sablelight/stoatbot">stoatbot</a></h3>
+        <p>Chat bot for Stoat — tickets, giveaways, moderation, automod, reaction roles, welcome messages.</p>
+        <div class="stack"><span class="tag">Python</span><span class="tag">SQLite</span><span class="tag">Bot</span></div>
+      </div>
+
+      <div class="card">
+        <h3><a href="https://github.com/sablelight/two-stack">two-stack</a></h3>
+        <p>One REST API spec, implemented twice. What actually differs between Go's stdlib and FastAPI when you write both.</p>
+        <div class="stack"><span class="tag">Go</span><span class="tag">Python</span><span class="tag">Comparison</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Writing <span class="count"><a href="/blog.html">all posts</a></span></h2>
+    <ul class="posts">
+      <li>
+        <span class="date">Oct 2026</span>
+        <div class="t"><a href="/posts/double-checked-locking.html">Double-checked locking, and the test that caught me</a></div>
+        <div class="d">Caching a client so it only rebuilds when it must — and writing a test that failed for the wrong reason.</div>
+      </li>
+      <li>
+        <span class="date">Oct 2026</span>
+        <div class="t"><a href="/posts/go-redis-nil.html">go-redis returns redis.Nil, and redis.Nil == nil</a></div>
+        <div class="d">The one Go gotcha that broke my build, then broke my test suite in a way I didn't expect.</div>
+      </li>
+      <li>
+        <span class="date">Oct 2026</span>
+        <div class="t"><a href="/posts/token-bucket-lua.html">Rate limiting with a Redis Lua script</a></div>
+        <div class="d">Why the naive INCR/EXPIRE version leaks, and what atomicity actually buys you.</div>
+      </li>
+      <li>
+        <span class="date">Oct 2026</span>
+        <div class="t"><a href="/posts/extract-before-you-publish.html">Extract the library before you publish the app</a></div>
+        <div class="d">How a project with nothing to show turned into two that were independently testable.</div>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>How I work</h2>
+    <ul>
+      <li><strong>Rule out before theorising.</strong> The fastest way I've found to be wrong less often.</li>
+      <li><strong>Respect the actual limits.</strong> Scheduling work inside platform caps beats assuming infinite ones.</li>
+      <li><strong>Automate the third repetition.</strong> One and two are manual for a reason; three is a tool.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>
+      Built by <a href="https://github.com/sablelight">sablelight</a> ·
+      <a href="sablelight@proton.me">sablelight@proton.me</a> ·
+      Hosted on GitHub Pages
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

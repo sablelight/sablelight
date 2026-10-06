@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One spec, two runtimes: Go stdlib vs FastAPI — sablelight</title>
+<meta name="description" content="Writing the same REST API twice. Where the two actually felt different, beyond the usual talking points.">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <span class="brand">sablelight</span>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/blog.html" class="on">Blog</a>
+      <a href="https://github.com/sablelight">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>One spec, two runtimes: Go stdlib vs FastAPI</h1>
+    <p class="lead">
+      The same task API written twice — Go's <code>net/http</code> and Python's
+      FastAPI — where the differences turned out to be.
+    </p>
+  </div>
+  <p>
+    The spec was small and deliberately boring: create, read, update, delete a task,
+    plus a health check, in-memory storage, thread-safe, with request logging. Roughly
+    what you would write in the first hour of a project.
+  </p>
+
+  <p>
+    I wrote it twice rather than reading someone else's comparison. Here is what was
+    actually different when I did it.
+  </p>
+
+  <h2>Validation is where the philosophy shows</h2>
+
+  <p>
+    Python's model meant the payload was checked before my handler ran. A missing
+    <code>title</code> was a <code>422</code> for free. Roughly four lines of
+    configuration.
+  </p>
+
+<pre><code>class TaskCreate(BaseModel):
+    title: str
+    description: str = ""</code></pre>
+
+  <p>
+    Go gave no validation at all. I decoded the JSON by hand, checked the field
+    myself, and wrote the <code>400</code> myself. More lines, and every endpoint
+    needs the same discipline applied again. Nothing prevents the next person from
+    forgetting.
+  </p>
+
+  <p>
+    FastAPI wins this outright for an API-first shape. The Go version is not worse
+    code — it is just code you have to keep writing.
+  </p>
+  <h2>Concurrency was the inverse of what I expected</h2>
+
+  <p>
+    Go's handler goroutines are concurrent by default; I added a
+    <code>sync.RWMutex</code> to the store and that was the entire story.
+  </p>
+
+  <p>
+    FastAPI is a single-threaded event loop. I used <code>async def</code> handlers and
+    an <code>asyncio.Lock</code>. It works, and for an in-memory store it is more than
+    enough — but the default shape of a Python handler is <em>not</em> a concurrent one.
+    You opt into it, and the moment you forget to <code>await</code> a blocking call you
+    block the whole loop.
+  </p>
+
+  <p>
+    So: Go was easier to get concurrency <em>right</em>, Python was easier to get the
+    endpoint <em>written</em>. Those are different axes and the usual arguments tend to
+    collapse them into one.
+  </p>
+
+  <h2>The practical differences</h2>
+
+  <ul>
+    <li><strong>Docs:</strong> FastAPI generated <code>/docs</code> and
+        <code>/redoc</code> from the same type annotations. Go had none without extra
+        tooling.</li>
+    <li><strong>Dependencies:</strong> Go used zero. Python used three
+        (<code>fastapi</code>, <code>uvicorn</code>, <code>pydantic</code>).</li>
+    <li><strong>Race checking:</strong> <code>go test -race</code> is built in and
+        caught nothing here, but the confidence cost nothing.</li>
+    <li><strong>Cold start:</strong> Go's static binary vs a virtualenv that had to be
+        built first.</li>
+  </ul>
+  <h2>What I would actually choose</h2>
+
+  <p>
+    For a service where the API shape is known up front and I care about deploy shape,
+    Go: no dependency graph, a single binary, race detector available, fewer ways to
+    write something subtly wrong at runtime.
+  </p>
+
+  <p>
+    For iterating on an endpoint while the shape is still moving, FastAPI: the
+    automatic docs and model validation mean fewer round trips to check I did not
+    forget a field.
+  </p>
+
+  <p>
+    Neither is the correct answer by default, and I do not think either is the more
+    <em>serious</em> language. What this exercise actually taught me was which problems
+    each makes easy — and that you only find that out by writing the same thing twice
+    rather than by arguing it.
+  </p>
+
+  <p>
+    Both implementations and the full comparison table are in
+    <a href="https://github.com/sablelight/two-stack">two-stack</a>.
+  </p>
+
+  <p><a href="/blog.html">← All posts</a></p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p><a href="/">← Back</a> · Built by <a href="https://github.com/sablelight">sablelight</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

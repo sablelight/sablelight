@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extract the library before you publish the app — sablelight</title>
+<meta name="description" content="A project with nothing worth showing became two independently testable packages. The extraction is the work.">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <span class="brand">sablelight</span>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/blog.html" class="on">Blog</a>
+      <a href="https://github.com/sablelight">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>Extract the library before you publish the app</h1>
+    <p class="lead">
+      A project with nothing worth showing became two independently testable
+      packages. The extraction is the work.
+    </p>
+  </div>
+  <p>
+    The project started as a Telegram bot. It had 26 source files, 16 of which were
+    indexers for torrent sites. There was no world where that went on a public
+    profile. By every measure I care about — would this embarrass me, is it something
+    I would want an interviewer to open — it was a write-off.
+  </p>
+
+  <p>So the first honest question was: what, if anything, in here did I actually write well?</p>
+
+  <h2>Two files</h2>
+
+  <p>Out of the whole tree, two things were generic, useful, and had nothing to do with
+    the purpose of the app:</p>
+
+  <ul>
+    <li><strong><code>config</code></strong> — an option registry where the environment
+        variable name is derived from the key itself.</li>
+    <li><strong><code>http.go</code></strong> — a shared <code>*http.Client</code>
+        whose transport can be rebuilt at runtime when its proxy setting changes.</li>
+  </ul>
+
+  <p>
+    Everything else went: the indexers, the aggregation layer, the command handlers,
+    the Dockerfile with the Tor bootstrap in it.
+  </p>
+  <h2>Why it was worth splitting</h2>
+
+  <p>
+    Inside the app both of those were testable only by simulating an app. As packages
+    they test in isolation — <code>config</code> takes five seconds with
+    <code>t.Setenv</code>, and <code>proxyhttp</code> gets a race-detector test that
+    runs the client from 32 goroutines at once.
+  </p>
+
+  <p>
+    The original repository had <strong>zero tests</strong>. The extracted version has
+    12, at 92% coverage. Not because I became a better test writer in an afternoon,
+    but because the boundary that made testing awkward was gone.
+  </p>
+
+  <h2>Two things I had to rename</h2>
+
+  <p>
+    The config keys were namespaced to the old project —
+    <code>SAKURAS.lookup.proxy_mode</code>. They became
+    <code>proxy.mode</code>, and the env prefix in <code>EnvName()</code> changed to
+    <code>PROXYHTTP_</code>.
+  </p>
+
+  <p>
+    The rename was safe for one specific reason I checked before doing it: the env
+    var is derived from the segment <em>after the last dot</em>. So
+    <code>lookup.proxy_mode</code> and <code>SAKURAS.lookup.proxy_mode</code> both
+    resolve to <code>LOOKUP_PROXY_MODE</code>. Changing the namespace did not silently
+    break every deployment's environment.
+  </p>
+  <h2>How to frame it honestly</h2>
+
+  <p>
+    This is not "I built a proxy library from scratch". It is
+    <strong>I extracted the reusable core from a larger service and made it
+    independently testable</strong> — which is a normal, common engineering move and a
+    perfectly good thing to say in an interview.
+  </p>
+
+  <p>
+    What would have been dishonest is presenting the 400-line library as a project in
+    its own right, as though it had been the goal. It is a component. The stronger
+    portfolio piece is elsewhere.
+  </p>
+
+  <p>
+    The lesson I took from it: if you have built one big thing and only part of it is
+    good, you do not have to throw the whole thing away, and you do not have to publish
+    the part that isn't. Find the seam, cut along it, and test the piece you kept.
+  </p>
+
+  <p><a href="/blog.html">← All posts</a></p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p><a href="/">← Back</a> · Built by <a href="https://github.com/sablelight">sablelight</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
