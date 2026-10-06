@@ -13,6 +13,7 @@ Open to **junior backend and full-stack roles**.
 | [Webhook Sender](https://github.com/sablelight/webhook-sender) | C#/.NET 10 WPF · Python/Tkinter | Desktop app for composing and previewing Discord webhooks — embeds, interactive buttons, live preview, and `429` rate-limit backoff. Built twice to compare how two runtimes solve the same problems. |
 | [stoatbot](https://github.com/sablelight/stoatbot) | Python · stoat.py · aiosqlite | Chat bot for Stoat — tickets, giveaways, moderation, automod, reaction roles, welcome messages, HTML vouches panel. |
 | [telegram-bot](https://github.com/sablelight/telegram-bot) | Go | Reusable core: env-backed config registry + shared `*http.Client` with proxy-aware transport. Extracted from a larger service; independently testable (92% coverage, race-clean). |
+| [ratelimit-gateway](https://github.com/sablelight/ratelimit-gateway) | Go · Redis | Rate-limiting reverse proxy with token-bucket algorithm, per-API-key limits, Prometheus-compatible metrics. |
 | [discord-to-stoat-migration](https://github.com/sablelight/discord-to-stoat-migration) | Node · discord.js · stoat.js | Tooling to migrate a Discord server over to Stoat. |
 
 ## Things I'm into
