@@ -15,6 +15,7 @@ Open to **junior backend and full-stack roles**.
 | [telegram-bot](https://github.com/sablelight/telegram-bot) | Go | Reusable core: env-backed config registry + shared `*http.Client` with proxy-aware transport. Extracted from a larger service; independently testable (92% coverage, race-clean). |
 | [ratelimit-gateway](https://github.com/sablelight/ratelimit-gateway) | Go · Redis | Rate-limiting reverse proxy with token-bucket algorithm, per-API-key limits, Prometheus-compatible metrics. |
 | [link-checker](https://github.com/sablelight/link-checker) | TypeScript · Cloudflare Workers · D1 · KV | Scheduled link monitoring with D1 history, KV cache, webhook alerts, SSL tracking. |
+| [gh-prune](https://github.com/sablelight/gh-prune) | Go · Cobra · GitHub API | CLI tool to delete merged branches with dry-run, age filtering, branch protection. |
 | [discord-to-stoat-migration](https://github.com/sablelight/discord-to-stoat-migration) | Node · discord.js · stoat.js | Tooling to migrate a Discord server over to Stoat. |
 
 ## Things I'm into
