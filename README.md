@@ -14,6 +14,7 @@ Open to **junior backend and full-stack roles**.
 | [stoatbot](https://github.com/sablelight/stoatbot) | Python · stoat.py · aiosqlite | Chat bot for Stoat — tickets, giveaways, moderation, automod, reaction roles, welcome messages, HTML vouches panel. |
 | [telegram-bot](https://github.com/sablelight/telegram-bot) | Go | Reusable core: env-backed config registry + shared `*http.Client` with proxy-aware transport. Extracted from a larger service; independently testable (92% coverage, race-clean). |
 | [ratelimit-gateway](https://github.com/sablelight/ratelimit-gateway) | Go · Redis | Rate-limiting reverse proxy with token-bucket algorithm, per-API-key limits, Prometheus-compatible metrics. |
+| [job-queue](https://github.com/sablelight/job-queue) | Go · Redis | Background job queue with worker pool, Redis streams, retries, dead-letter queue, priority support. |
 | [discord-to-stoat-migration](https://github.com/sablelight/discord-to-stoat-migration) | Node · discord.js · stoat.js | Tooling to migrate a Discord server over to Stoat. |
 
 ## Things I'm into
